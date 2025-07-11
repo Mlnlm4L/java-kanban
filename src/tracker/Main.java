@@ -1,3 +1,10 @@
+package tracker;
+
+import tracker.model.Status;
+import tracker.model.Task;
+import tracker.model.Epic;
+import tracker.model.Subtask;
+import tracker.manager.TaskManager;
 import java.util.List;
 
 public class Main {

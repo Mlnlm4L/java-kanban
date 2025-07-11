@@ -1,10 +1,15 @@
+package tracker.model;
+
 import java.util.Objects;
 
-class Task {
-    private int id;
-    private String title;
-    private String description;
-    private Status status;
+public class Task {
+    protected int id;
+    protected String title;
+    protected String description;
+    protected Status status;
+
+    public Task() {
+    }
 
     public Task(String title, String description, Status status) {
         this.title = title;
@@ -62,6 +67,7 @@ class Task {
         return "Task{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
                 ", status=" + status +
                 '}';
     }

@@ -1,6 +1,13 @@
+package tracker.manager;
+
+import tracker.model.Status;
+import tracker.model.Task;
+import tracker.model.Epic;
+import tracker.model.Subtask;
+
 import java.util.*;
 
-class TaskManager {
+public class TaskManager {
     private int nextId = 1;
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
@@ -132,7 +139,7 @@ class TaskManager {
 
     public Subtask createSubtask(Subtask subtask) {
         int epicId = subtask.getEpicId();
-        if (!epics.containsKey(epicId)){
+        if (!epics.containsKey(epicId)) {
             return null;
         }
 
@@ -146,7 +153,7 @@ class TaskManager {
     public void updateSubtask(Subtask subtask) {
         int subtaskId = subtask.getId();
         Subtask savedSubtask = subtasks.get(subtaskId);
-        if (savedSubtask == null){
+        if (savedSubtask == null) {
             return;
         }
 
