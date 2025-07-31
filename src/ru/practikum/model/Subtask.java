@@ -1,4 +1,4 @@
-package tracker.model;
+package ru.practikum.model;
 
 public class Subtask extends Task {
     private final int epicId;

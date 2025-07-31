@@ -1,4 +1,4 @@
-package tracker.model;
+package ru.practikum.model;
 
 import java.util.Objects;
 
@@ -7,9 +7,6 @@ public class Task {
     protected String title;
     protected String description;
     protected Status status;
-
-    public Task() {
-    }
 
     public Task(String title, String description, Status status) {
         this.title = title;

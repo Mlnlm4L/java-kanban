@@ -1,17 +1,18 @@
-package tracker.manager;
+package ru.practikum.manager;
 
-import tracker.model.Status;
-import tracker.model.Task;
-import tracker.model.Epic;
-import tracker.model.Subtask;
+import ru.practikum.model.Status;
+import ru.practikum.model.Task;
+import ru.practikum.model.Epic;
+import ru.practikum.model.Subtask;
 
 import java.util.*;
 
-public class TaskManager {
+public class InMemoryTaskManager implements TaskManager {
     private int nextId = 1;
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
     private final Map<Integer, Subtask> subtasks = new HashMap<>();
+    private final HistoryManager historyManager = Managers.getDefaultHistory();
 
     private int generateId() {
         return nextId++;
@@ -56,54 +57,70 @@ public class TaskManager {
         }
     }
 
+    @Override
     public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
     }
 
+    @Override
     public void deleteAllTasks() {
         tasks.clear();
     }
 
+    @Override
     public Task getTaskById(int id) {
-        return tasks.get(id);
+        Task task = tasks.get(id);
+        historyManager.add(task);
+        return task;
+
     }
 
+    @Override
     public Task createTask(Task task) {
         task.setId(generateId());
         tasks.put(task.getId(), task);
         return task;
     }
 
+    @Override
     public void updateTask(Task task) {
         if (tasks.containsKey(task.getId())) {
             tasks.put(task.getId(), task);
         }
     }
 
+    @Override
     public void deleteTaskById(int id) {
         tasks.remove(id);
     }
 
+    @Override
     public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
+    @Override
     public void deleteAllEpics() {
         epics.clear();
         subtasks.clear();
     }
 
+    @Override
     public Epic getEpicById(int id) {
-        return epics.get(id);
+        Epic epic = epics.get(id);
+        historyManager.add(epic);
+        return epic;
     }
 
 
+    @Override
     public Epic createEpic(Epic epic) {
         epic.setId(generateId());
         epics.put(epic.getId(), epic);
         return epic;
     }
 
+    @Override
     public void updateEpic(Epic epic) {
         Epic savedEpic = epics.get(epic.getId());
         if (savedEpic != null) {
@@ -112,6 +129,7 @@ public class TaskManager {
         }
     }
 
+    @Override
     public void deleteEpicById(int id) {
         Epic epic = epics.remove(id);
         if (epic != null) {
@@ -121,10 +139,12 @@ public class TaskManager {
         }
     }
 
+    @Override
     public List<Subtask> getAllSubtasks() {
         return new ArrayList<>(subtasks.values());
     }
 
+    @Override
     public void deleteAllSubtasks() {
         subtasks.clear();
         for (Epic epic : epics.values()) {
@@ -133,10 +153,14 @@ public class TaskManager {
         }
     }
 
+    @Override
     public Subtask getSubtaskById(int id) {
-        return subtasks.get(id);
+        Subtask subtask = subtasks.get(id);
+        historyManager.add(subtask);
+        return subtask;
     }
 
+    @Override
     public Subtask createSubtask(Subtask subtask) {
         int epicId = subtask.getEpicId();
         if (!epics.containsKey(epicId)) {
@@ -150,18 +174,19 @@ public class TaskManager {
         return subtask;
     }
 
+    @Override
     public void updateSubtask(Subtask subtask) {
         int subtaskId = subtask.getId();
         Subtask savedSubtask = subtasks.get(subtaskId);
         if (savedSubtask == null) {
             return;
         }
-
         int epicId = savedSubtask.getEpicId();
         subtasks.put(subtaskId, subtask);
         updateEpicStatus(epicId);
     }
 
+    @Override
     public void deleteSubtaskById(int id) {
         Subtask subtask = subtasks.remove(id);
         if (subtask != null) {
@@ -174,6 +199,7 @@ public class TaskManager {
         }
     }
 
+    @Override
     public List<Subtask> getSubtasksByEpicId(int epicId) {
         Epic epic = epics.get(epicId);
         if (epic == null) return Collections.emptyList();
@@ -186,5 +212,10 @@ public class TaskManager {
             }
         }
         return result;
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        return historyManager.getHistory();
     }
 }

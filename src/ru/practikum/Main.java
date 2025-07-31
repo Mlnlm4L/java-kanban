@@ -1,25 +1,25 @@
-package tracker;
+package ru.practikum;
 
-import tracker.model.Status;
-import tracker.model.Task;
-import tracker.model.Epic;
-import tracker.model.Subtask;
-import tracker.manager.TaskManager;
+import ru.practikum.manager.Managers;
+import ru.practikum.model.Status;
+import ru.practikum.model.Task;
+import ru.practikum.model.Epic;
+import ru.practikum.model.Subtask;
+import ru.practikum.manager.TaskManager;
+
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = Managers.getDefault();
 
         Task task1 = manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW));
         Task task2 = manager.createTask(new Task("Задача 2", "Описание 2", Status.NEW));
-
         Epic epic1 = manager.createEpic(new Epic("Эпик 1", "Описание эпика 1"));
         Subtask subtask1 = manager.createSubtask(new Subtask("Подзадача 1", "Описание 1",
                 Status.NEW, epic1.getId()));
         Subtask subtask2 = manager.createSubtask(new Subtask("Подзадача 2", "Описание 2",
                 Status.NEW, epic1.getId()));
-
         Epic epic2 = manager.createEpic(new Epic("Эпик 2", "Описание эпика 2"));
         Subtask subtask3 = manager.createSubtask(new Subtask("Подзадача 3", "Описание 3",
                 Status.NEW, epic2.getId()));
@@ -31,18 +31,25 @@ public class Main {
         //Изменение статусов
         task1.setStatus(Status.IN_PROGRESS);
         manager.updateTask(task1);
+        manager.getTaskById(task1.getId());
 
         task2.setStatus(Status.DONE);
         manager.updateTask(task2);
+        manager.getTaskById(task2.getId());
 
         subtask1.setStatus(Status.DONE);
         manager.updateSubtask(subtask1);
+        manager.getSubtaskById(subtask1.getId());
+        manager.getEpicById(epic1.getId());
 
         subtask2.setStatus(Status.DONE);
         manager.updateSubtask(subtask2);
+        manager.getSubtaskById(subtask2.getId());
 
         subtask3.setStatus(Status.IN_PROGRESS);
         manager.updateSubtask(subtask3);
+        manager.getSubtaskById(subtask3.getId());
+        manager.getEpicById(epic2.getId());
 
         //Печать после изменений
         System.out.println("\n=== После изменения статусов ===");
@@ -58,6 +65,11 @@ public class Main {
         System.out.println("Эпик 1: " + epic1.getStatus() + " (Ожидается DONE)");
         System.out.println("Эпик 2: " + epic2.getStatus() + " (Ожидается IN_PROGRESS)");
 
+        //История
+        List<Task> history = manager.getHistory();
+        System.out.println("\n=== История запросов ===");
+        history.forEach(task -> System.out.println(task.getTitle()));
+
         //Удаление
         manager.deleteTaskById(task1.getId());
         manager.deleteEpicById(epic1.getId());
@@ -69,7 +81,7 @@ public class Main {
         System.out.println("Задачи:");
         List<Task> tasks = manager.getAllTasks();
         for (Task task : tasks) {
-            System.out.println(task);
+            System.out.println(task.toString());
         }
 
         System.out.println("\nЭпики:");
