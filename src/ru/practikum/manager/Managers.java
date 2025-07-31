@@ -9,7 +9,6 @@ public final class Managers {
     }
 
     public static TaskManager getDefault() {
-        InMemoryTaskManager inMemoryTaskManager = new InMemoryTaskManager();
-        return inMemoryTaskManager;
+        return new InMemoryTaskManager();
     }
 }
