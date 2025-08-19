@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final List<Task> history = new ArrayList<>();
 
     private static class Node {
         Task task;
@@ -71,9 +70,9 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     private void removeNode(Node node) {
+        if (node == null) return;
         final Node next = node.next;
         final Node prev = node.prev;
-        if (node == null) return;
 
         if (prev == null) {
             head = next;
@@ -89,5 +88,7 @@ public class InMemoryHistoryManager implements HistoryManager {
             node.next = null;
         }
         node.task = null;
+        node.prev = null;
+        node.next = null;
     }
 }
