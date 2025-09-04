@@ -8,7 +8,7 @@ import ru.practikum.model.Subtask;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
-    private int nextId = 1;
+    protected int nextId = 1;
     protected final Map<Integer, Task> tasks = new HashMap<>();
     protected final Map<Integer, Epic> epics = new HashMap<>();
     protected final Map<Integer, Subtask> subtasks = new HashMap<>();
@@ -16,10 +16,6 @@ public class InMemoryTaskManager implements TaskManager {
 
     protected int generateId() {
         return nextId++;
-    }
-
-    protected void setNextId(int nextId) {
-        this.nextId = nextId;
     }
 
     protected void updateEpicStatus(int epicId) {

@@ -1,5 +1,7 @@
 package ru.practikum.manager;
 
+import ru.practikum.exception.ManagerLoadException;
+import ru.practikum.exception.ManagerSaveException;
 import ru.practikum.model.*;
 
 import java.io.*;
@@ -9,6 +11,7 @@ import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
+    public static final String HEADER = "id,type,name,status,description,epic\n";
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -16,7 +19,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     protected void save() {
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
-            bufferedWriter.write("id,type,name,status,description,epic\n");
+            bufferedWriter.write(HEADER);
 
             Map<Integer, Task> sortedTasks = new TreeMap<>();
             sortedTasks.putAll(tasks);
@@ -51,7 +54,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 if (line.isEmpty()) {
                     continue;
                 }
-                Task task = fromString(line);
+                Task task = fileBackedTaskManager.fromString(line);
                 if (task.getId() > maxId) {
                     maxId = task.getId();
                 }
@@ -75,14 +78,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 }
             }
 
-            for (Epic epic : fileBackedTaskManager.epics.values()) {
-                fileBackedTaskManager.updateEpicStatus(epic.getId());
-            }
-
-            fileBackedTaskManager.setNextId(maxId + 1);
+            fileBackedTaskManager.nextId = maxId + 1;
 
         } catch (IOException e) {
-            throw new ManagerSaveException("Ошибка чтения данных из файла: " + file.getName(), e);
+            throw new ManagerLoadException("Ошибка чтения данных из файла: " + file.getName(), e);
         }
         return fileBackedTaskManager;
     }
@@ -106,7 +105,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    protected static Task fromString(String value) {
+    protected Task fromString(String value) {
         String[] fields = value.split(",");
         int id = Integer.parseInt(fields[0]);
         TaskType type = TaskType.valueOf(fields[1]);

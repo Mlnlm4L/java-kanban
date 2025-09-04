@@ -12,8 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class FileBackedTaskManagerTest {
@@ -75,10 +74,56 @@ class FileBackedTaskManagerTest {
     void testUploadingMultipleTasks() {
 
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
-        manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW));
-        manager.createTask(new Task("Задача 2", "Описание 2", Status.DONE));
+        Task task = manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW));
+        Task task2 = manager.createTask(new Task("Задача 2", "Описание 2", Status.DONE));
+        Epic epic = manager.createEpic(new Epic("Эпик", "Описание эпика"));
+        Subtask subtask = manager.createSubtask(new Subtask("Подзадача", "Описание подзадачи",
+                Status.NEW, epic.getId()));
+        Epic epic2 = manager.createEpic(new Epic("Эпик2", "Описание эпика2"));
+        Subtask subtask2 = manager.createSubtask(new Subtask("Подзадача2", "Описание подзадачи2",
+                Status.IN_PROGRESS, epic2.getId()));
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
         assertEquals(2, loadedManager.getAllTasks().size());
+        assertEquals(2, loadedManager.getAllEpics().size());
+        assertEquals(2, loadedManager.getAllSubtasks().size());
+
+        Task loadedTask = loadedManager.getTaskById(task.getId());
+        assertNotNull(loadedTask);
+        assertEquals("Задача 1", loadedTask.getTitle());
+        assertEquals("Описание 1", loadedTask.getDescription());
+        assertEquals(Status.NEW, loadedTask.getStatus());
+
+        Task loadedTask2 = loadedManager.getTaskById(task2.getId());
+        assertNotNull(loadedTask2);
+        assertEquals("Задача 2", loadedTask2.getTitle());
+        assertEquals("Описание 2", loadedTask2.getDescription());
+        assertEquals(Status.DONE, loadedTask2.getStatus());
+
+        Epic loadedEpic = loadedManager.getEpicById(epic.getId());
+        assertNotNull(loadedEpic);
+        assertEquals("Эпик", loadedEpic.getTitle());
+        assertEquals("Описание эпика", loadedEpic.getDescription());
+        assertTrue(loadedEpic.getSubtaskIds().contains(subtask.getId()));
+
+        Epic loadedEpic2 = loadedManager.getEpicById(epic2.getId());
+        assertNotNull(loadedEpic2);
+        assertEquals("Эпик2", loadedEpic2.getTitle());
+        assertEquals("Описание эпика2", loadedEpic2.getDescription());
+        assertTrue(loadedEpic2.getSubtaskIds().contains(subtask2.getId()));
+
+        Subtask loadedSubtask = loadedManager.getSubtaskById(subtask.getId());
+        assertNotNull(loadedSubtask);
+        assertEquals("Подзадача", loadedSubtask.getTitle());
+        assertEquals("Описание подзадачи", loadedSubtask.getDescription());
+        assertEquals(Status.NEW, loadedSubtask.getStatus());
+        assertEquals(epic.getId(), loadedSubtask.getEpicId());
+
+        Subtask loadedSubtask2 = loadedManager.getSubtaskById(subtask2.getId());
+        assertNotNull(loadedSubtask);
+        assertEquals("Подзадача2", loadedSubtask2.getTitle());
+        assertEquals("Описание подзадачи2", loadedSubtask2.getDescription());
+        assertEquals(Status.IN_PROGRESS, loadedSubtask2.getStatus());
+        assertEquals(epic2.getId(), loadedSubtask2.getEpicId());
     }
 }
