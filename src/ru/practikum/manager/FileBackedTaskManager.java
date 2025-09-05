@@ -11,7 +11,7 @@ import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
-    public static final String HEADER = "id,type,name,status,description,epic\n";
+    private static final String HEADER = "id,type,name,status,description,epic\n";
 
     public FileBackedTaskManager(File file) {
         this.file = file;

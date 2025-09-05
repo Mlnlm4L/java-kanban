@@ -90,39 +90,39 @@ class FileBackedTaskManagerTest {
 
         Task loadedTask = loadedManager.getTaskById(task.getId());
         assertNotNull(loadedTask);
-        assertEquals("Задача 1", loadedTask.getTitle());
-        assertEquals("Описание 1", loadedTask.getDescription());
+        assertEquals(task.getTitle(), loadedTask.getTitle());
+        assertEquals(task.getDescription(), loadedTask.getDescription());
         assertEquals(Status.NEW, loadedTask.getStatus());
 
         Task loadedTask2 = loadedManager.getTaskById(task2.getId());
         assertNotNull(loadedTask2);
-        assertEquals("Задача 2", loadedTask2.getTitle());
-        assertEquals("Описание 2", loadedTask2.getDescription());
+        assertEquals(task2.getTitle(), loadedTask2.getTitle());
+        assertEquals(task2.getDescription(), loadedTask2.getDescription());
         assertEquals(Status.DONE, loadedTask2.getStatus());
 
         Epic loadedEpic = loadedManager.getEpicById(epic.getId());
         assertNotNull(loadedEpic);
-        assertEquals("Эпик", loadedEpic.getTitle());
-        assertEquals("Описание эпика", loadedEpic.getDescription());
+        assertEquals(epic.getTitle(), loadedEpic.getTitle());
+        assertEquals(epic.getDescription(), loadedEpic.getDescription());
         assertTrue(loadedEpic.getSubtaskIds().contains(subtask.getId()));
 
         Epic loadedEpic2 = loadedManager.getEpicById(epic2.getId());
         assertNotNull(loadedEpic2);
-        assertEquals("Эпик2", loadedEpic2.getTitle());
-        assertEquals("Описание эпика2", loadedEpic2.getDescription());
+        assertEquals(epic2.getTitle(), loadedEpic2.getTitle());
+        assertEquals(epic2.getDescription(), loadedEpic2.getDescription());
         assertTrue(loadedEpic2.getSubtaskIds().contains(subtask2.getId()));
 
         Subtask loadedSubtask = loadedManager.getSubtaskById(subtask.getId());
         assertNotNull(loadedSubtask);
-        assertEquals("Подзадача", loadedSubtask.getTitle());
-        assertEquals("Описание подзадачи", loadedSubtask.getDescription());
+        assertEquals(subtask.getTitle(), loadedSubtask.getTitle());
+        assertEquals(subtask.getDescription(), loadedSubtask.getDescription());
         assertEquals(Status.NEW, loadedSubtask.getStatus());
         assertEquals(epic.getId(), loadedSubtask.getEpicId());
 
         Subtask loadedSubtask2 = loadedManager.getSubtaskById(subtask2.getId());
         assertNotNull(loadedSubtask);
-        assertEquals("Подзадача2", loadedSubtask2.getTitle());
-        assertEquals("Описание подзадачи2", loadedSubtask2.getDescription());
+        assertEquals(subtask2.getTitle(), loadedSubtask2.getTitle());
+        assertEquals(subtask2.getDescription(), loadedSubtask2.getDescription());
         assertEquals(Status.IN_PROGRESS, loadedSubtask2.getStatus());
         assertEquals(epic2.getId(), loadedSubtask2.getEpicId());
     }
