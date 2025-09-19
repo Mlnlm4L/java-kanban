@@ -1,8 +1,8 @@
 package ru.practikum.manager;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.practikum.exception.ManagerLoadException;
 import ru.practikum.model.Epic;
 import ru.practikum.model.Status;
 import ru.practikum.model.Subtask;
@@ -11,16 +11,23 @@ import ru.practikum.model.Task;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class FileBackedTaskManagerTest {
+public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
     File file;
 
-    @BeforeEach
-    void create() throws IOException {
-        file = File.createTempFile("test_tasks", ".csv");
+    @Override
+    protected FileBackedTaskManager createTaskManager() {
+        try {
+            file = File.createTempFile("test_tasks", ".csv");
+            return new FileBackedTaskManager(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось создать временный файл", e);
+        }
     }
 
     @AfterEach
@@ -53,35 +60,43 @@ class FileBackedTaskManagerTest {
     void testSaveMultipleTasks() throws IOException {
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
 
-        Task task = manager.createTask(new Task("Задача 1", "Описание задачи", Status.NEW));
+        Task task = manager.createTask(new Task("Задача 1", "Описание задачи", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2025, 1, 1, 10, 0)));
         Epic epic = manager.createEpic(new Epic("Эпик 1", "Описание эпика"));
         Subtask subtask = manager.createSubtask(new Subtask("Подзадача 1", "Описание подзадачи",
-                Status.NEW, epic.getId()));
+                Status.NEW, epic.getId(), Duration.ofHours(2),
+                LocalDateTime.of(2025, 1, 1, 12, 0)));
 
         assertTrue(file.exists(), "Файл должен существовать");
         assertTrue(file.length() > 0, "Файл должен содержать данные");
 
         String string = Files.readString(file.toPath());
-        assertTrue(string.contains("id,type,name,status,description,epic"), "Должен содержать заголовок");
+        assertTrue(string.contains("id,type,name,status,description,duration,startTime,epic"),
+                "Должен содержать заголовок");
         assertTrue(string.contains("TASK"), "Должен содержать задачу");
         assertTrue(string.contains("EPIC"), "Должен содержать эпик");
         assertTrue(string.contains("SUBTASK"), "Должен содержать подзадачу");
         assertTrue(string.contains("Задача 1"), "Должен содержать название задачи");
         assertTrue(string.contains("Эпик 1"), "Должен содержать название эпика");
+        assertTrue(string.contains("60"), "Должен содержать продолжительность в минутах");
+        assertTrue(string.contains("2025-01-01T10:00"), "Должен содержать время начала");
     }
 
     @Test
     void testUploadingMultipleTasks() {
-
         FileBackedTaskManager manager = new FileBackedTaskManager(file);
-        Task task = manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW));
-        Task task2 = manager.createTask(new Task("Задача 2", "Описание 2", Status.DONE));
+        Task task = manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2025, 1, 1, 10, 0)));
+        Task task2 = manager.createTask(new Task("Задача 2", "Описание 2", Status.DONE,
+                Duration.ofHours(2), LocalDateTime.of(2025, 1, 1, 12, 0)));
         Epic epic = manager.createEpic(new Epic("Эпик", "Описание эпика"));
         Subtask subtask = manager.createSubtask(new Subtask("Подзадача", "Описание подзадачи",
-                Status.NEW, epic.getId()));
+                Status.NEW, epic.getId(), Duration.ofHours(1),
+                LocalDateTime.of(2025, 1, 1, 14, 0)));
         Epic epic2 = manager.createEpic(new Epic("Эпик2", "Описание эпика2"));
         Subtask subtask2 = manager.createSubtask(new Subtask("Подзадача2", "Описание подзадачи2",
-                Status.IN_PROGRESS, epic2.getId()));
+                Status.IN_PROGRESS, epic2.getId(), Duration.ofHours(3),
+                LocalDateTime.of(2025, 1, 1, 16, 0)));
 
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
         assertEquals(2, loadedManager.getAllTasks().size());
@@ -93,12 +108,16 @@ class FileBackedTaskManagerTest {
         assertEquals(task.getTitle(), loadedTask.getTitle());
         assertEquals(task.getDescription(), loadedTask.getDescription());
         assertEquals(Status.NEW, loadedTask.getStatus());
+        assertEquals(task.getDuration(), loadedTask.getDuration());
+        assertEquals(task.getStartTime(), loadedTask.getStartTime());
 
         Task loadedTask2 = loadedManager.getTaskById(task2.getId());
         assertNotNull(loadedTask2);
         assertEquals(task2.getTitle(), loadedTask2.getTitle());
         assertEquals(task2.getDescription(), loadedTask2.getDescription());
         assertEquals(Status.DONE, loadedTask2.getStatus());
+        assertEquals(task2.getDuration(), loadedTask2.getDuration());
+        assertEquals(task2.getStartTime(), loadedTask2.getStartTime());
 
         Epic loadedEpic = loadedManager.getEpicById(epic.getId());
         assertNotNull(loadedEpic);
@@ -118,12 +137,25 @@ class FileBackedTaskManagerTest {
         assertEquals(subtask.getDescription(), loadedSubtask.getDescription());
         assertEquals(Status.NEW, loadedSubtask.getStatus());
         assertEquals(epic.getId(), loadedSubtask.getEpicId());
+        assertEquals(subtask.getDuration(), loadedSubtask.getDuration());
+        assertEquals(subtask.getStartTime(), loadedSubtask.getStartTime());
 
         Subtask loadedSubtask2 = loadedManager.getSubtaskById(subtask2.getId());
-        assertNotNull(loadedSubtask);
+        assertNotNull(loadedSubtask2);
         assertEquals(subtask2.getTitle(), loadedSubtask2.getTitle());
         assertEquals(subtask2.getDescription(), loadedSubtask2.getDescription());
         assertEquals(Status.IN_PROGRESS, loadedSubtask2.getStatus());
         assertEquals(epic2.getId(), loadedSubtask2.getEpicId());
+        assertEquals(subtask2.getDuration(), loadedSubtask2.getDuration());
+        assertEquals(subtask2.getStartTime(), loadedSubtask2.getStartTime());
+    }
+
+    @Test
+    void loadFromFileShouldThrowExceptionWhenFileNotFound() {
+        File nonExistentFile = new File("non_existent_file.txt");
+
+        assertThrows(ManagerLoadException.class, () -> {
+            FileBackedTaskManager.loadFromFile(nonExistentFile);
+        }, "Загрузка из несуществующего файла = исключение");
     }
 }

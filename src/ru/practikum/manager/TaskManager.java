@@ -29,6 +29,8 @@ public interface TaskManager {
 
     void updateEpic(Epic epic);
 
+    void updateEpicTime(int epicId);
+
     void deleteEpicById(int id);
 
     List<Subtask> getAllSubtasks();
@@ -46,4 +48,10 @@ public interface TaskManager {
     List<Subtask> getSubtasksByEpicId(int epicId);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
+
+    boolean hasTimeConflictWith(Task task, Task task2);
+
+    boolean isOverlappingWithAny(Task task);
 }

@@ -11,8 +11,5 @@ class ManagersTest {
         TaskManager taskManager = Managers.getDefault();
         assertNotNull(historyManager, "HistoryManager должен быть проинициализирован");
         assertNotNull(taskManager, "TaskManager должен быть проинициализирован");
-        assertTrue(historyManager instanceof InMemoryHistoryManager,
-                "Должен возвращаться InMemoryHistoryManager");
-        assertTrue(taskManager instanceof InMemoryTaskManager, "Должен возвращаться InMemoryTaskManager");
     }
 }

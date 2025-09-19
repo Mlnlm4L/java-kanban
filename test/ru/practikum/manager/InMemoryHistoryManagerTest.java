@@ -5,24 +5,34 @@ import org.junit.jupiter.api.Test;
 import ru.practikum.model.Status;
 import ru.practikum.model.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InMemoryHistoryManagerTest {
+public class InMemoryHistoryManagerTest extends TaskManagerTest<InMemoryTaskManager> {
     private HistoryManager historyManager;
     private Task task1;
     private Task task2;
     private Task task3;
 
+    @Override
+    protected InMemoryTaskManager createTaskManager() {
+        return new InMemoryTaskManager();
+    }
+
     @BeforeEach
     void set() {
         historyManager = new InMemoryHistoryManager();
-        task1 = new Task("Задача 1", "Описание 1", Status.NEW);
+        task1 = new Task("Задача 1", "Описание 1", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2024, 1, 1, 10, 0));
         task1.setId(1);
-        task2 = new Task("Задача 2", "Описание 2", Status.IN_PROGRESS);
+        task2 = new Task("Задача 2", "Описание 2", Status.IN_PROGRESS,
+                Duration.ofHours(2), LocalDateTime.of(2024, 1, 1, 12, 0));
         task2.setId(2);
-        task3 = new Task("Задача 3", "Описание 3", Status.DONE);
+        task3 = new Task("Задача 3", "Описание 3", Status.DONE,
+                Duration.ofHours(1), LocalDateTime.of(2024, 1, 1, 15, 0));
         task3.setId(3);
     }
 
@@ -92,7 +102,8 @@ public class InMemoryHistoryManagerTest {
     @Test
     void historyManagerShouldPreserveTaskState() {
         HistoryManager historyManager = Managers.getDefaultHistory();
-        Task task = new Task("Задача", "Описание", Status.NEW);
+        Task task = new Task("Задача", "Описание", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2024, 1, 1, 10, 0));
         task.setId(1);
         historyManager.add(task);
         Task historyTask = historyManager.getHistory().getFirst();
@@ -100,15 +111,53 @@ public class InMemoryHistoryManagerTest {
         assertEquals("Задача", historyTask.getTitle(), "История должна сохранять исходное название");
         assertEquals("Описание", historyTask.getDescription(),
                 "История должна сохранять исходное описание");
+        assertEquals(Duration.ofHours(1), historyTask.getDuration(),
+                "История должна сохранять продолжительность");
+        assertEquals(LocalDateTime.of(2024, 1, 1, 10, 0), historyTask.getStartTime(),
+                "История должна сохранять время начала");
     }
 
     @Test
     void add() {
-        Task task = new Task("Задача", "Описание", Status.NEW);
+        Task task = new Task("Задача", "Описание", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2024, 1, 1, 10, 0));
         HistoryManager historyManager = Managers.getDefaultHistory();
         historyManager.add(task);
         List<Task> history = historyManager.getHistory();
         assertNotNull(history, "После добавления задачи, история не должна быть пустой.");
         assertEquals(1, history.size(), "После добавления задачи, история не должна быть пустой.");
+    }
+
+    @Test
+    void removeShouldDeleteFirstTask() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task3);
+        historyManager.remove(task1.getId()); // удаление из начала
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(List.of(task2, task3), history);
+    }
+
+    @Test
+    void removeShouldDeleteMiddleTask() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task3);
+        historyManager.remove(task2.getId());
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(List.of(task1, task3), history);
+    }
+
+    @Test
+    void removeShouldDeleteLastTask() {
+        historyManager.add(task1);
+        historyManager.add(task2);
+        historyManager.add(task3);
+        historyManager.remove(task3.getId());
+        List<Task> history = historyManager.getHistory();
+        assertEquals(2, history.size());
+        assertEquals(List.of(task1, task2), history);
     }
 }
