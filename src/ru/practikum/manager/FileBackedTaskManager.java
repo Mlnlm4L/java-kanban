@@ -13,7 +13,7 @@ import java.util.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
-    private static final String HEADER = "id,type,name,status,description,duration,startTime,epic\n";
+    private static final String HEADER = "id,type,name,status,description,duration,startTime,endTime,epic\n";
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -95,8 +95,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String startTimeStr = task.getStartTime() != null ?
                 task.getStartTime().toString() : "";
 
+        String endTimeStr = task.getEndTime() != null ?
+                task.getEndTime().toString() : "";
+
         if (task instanceof Subtask subtask) {
-            return String.format("%d,%s,%s,%s,%s,%s,%s,%d",
+            return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%d",
                     subtask.getId(),
                     subtask.getType(),
                     subtask.getTitle(),
@@ -104,9 +107,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     subtask.getDescription(),
                     durationStr,
                     startTimeStr,
-                    subtask.getEpicId());
+                    endTimeStr,
+                    subtask.getEpicId()
+            );
         } else {
-            return String.format("%d,%s,%s,%s,%s,%s,%s,%s",
+            return String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s",
                     task.getId(),
                     task.getType(),
                     task.getTitle(),
@@ -114,6 +119,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     task.getDescription(),
                     durationStr,
                     startTimeStr,
+                    endTimeStr,
                     "");
         }
     }
@@ -137,10 +143,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             startTime = LocalDateTime.parse(fields[6]);
         }
 
+        LocalDateTime endTime = null;
+        if (!fields[7].isEmpty()) {
+            endTime = LocalDateTime.parse(fields[7]);
+        }
+
         switch (type) {
             case TASK:
                 Task task = new Task(title, description, status, duration, startTime);
                 task.setId(id);
+                sortedTasks.add(task);
                 return task;
 
             case EPIC:
@@ -149,14 +161,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 epic.setStatus(status);
                 epic.setDuration(duration);
                 epic.setStartTime(startTime);
+                epic.setEndTime(endTime);
+                sortedTasks.add(epic);
                 return epic;
 
             case SUBTASK:
-                int epicId = Integer.parseInt(fields[7]);
+                int epicId = Integer.parseInt(fields[8]);
                 Subtask subtask = new Subtask(title, description, status, epicId, duration, startTime);
                 subtask.setId(id);
+                sortedTasks.add(subtask);
                 return subtask;
-
             default:
                 throw new ManagerSaveException("Неизвестный тип задачи: " + type);
         }

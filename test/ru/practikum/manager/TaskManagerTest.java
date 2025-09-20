@@ -27,21 +27,19 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.deleteAllTasks();
         taskManager.deleteAllSubtasks();
         taskManager.deleteAllEpics();
-
         epic = new Epic("Тестовый Эпик", "Описание эпика");
         taskManager.createEpic(epic);
-
         task = new Task("Задача", "Описание задачи", Status.NEW,
-                Duration.ofHours(1), LocalDateTime.of(2025, 1, 2, 10, 0));
+                Duration.ofHours(1), LocalDateTime.of(2025, 2, 2, 10, 0));
 
         subtask1 = new Subtask("Подзадача 1", "Описание 1", Status.NEW, epic.getId(),
-                Duration.ofHours(1), LocalDateTime.of(2025, 1, 2, 10, 0));
+                Duration.ofHours(1), LocalDateTime.of(2025, 1, 1, 10, 0));
 
         subtask2 = new Subtask("Подзадача 2", "Описание 2", Status.NEW, epic.getId(),
-                Duration.ofHours(1), LocalDateTime.of(2025, 1, 2, 12, 0));
+                Duration.ofHours(1), LocalDateTime.of(2025, 1, 1, 12, 0));
 
         subtask3 = new Subtask("Подзадача 3", "Описание 3", Status.NEW, epic.getId(),
-                Duration.ofHours(1), LocalDateTime.of(2025, 1, 2, 14, 0));
+                Duration.ofHours(1), LocalDateTime.of(2025, 1, 1, 14, 0));
     }
 
     @Test

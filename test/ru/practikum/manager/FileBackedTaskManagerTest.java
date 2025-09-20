@@ -3,16 +3,14 @@ package ru.practikum.manager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import ru.practikum.exception.ManagerLoadException;
-import ru.practikum.model.Epic;
-import ru.practikum.model.Status;
-import ru.practikum.model.Subtask;
-import ru.practikum.model.Task;
+import ru.practikum.model.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -71,7 +69,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertTrue(file.length() > 0, "Файл должен содержать данные");
 
         String string = Files.readString(file.toPath());
-        assertTrue(string.contains("id,type,name,status,description,duration,startTime,epic"),
+        assertTrue(string.contains("id,type,name,status,description,duration,startTime,endTime,epic"),
                 "Должен содержать заголовок");
         assertTrue(string.contains("TASK"), "Должен содержать задачу");
         assertTrue(string.contains("EPIC"), "Должен содержать эпик");
@@ -124,12 +122,14 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(epic.getTitle(), loadedEpic.getTitle());
         assertEquals(epic.getDescription(), loadedEpic.getDescription());
         assertTrue(loadedEpic.getSubtaskIds().contains(subtask.getId()));
+        assertEquals(subtask.getEndTime(), loadedEpic.getEndTime());
 
         Epic loadedEpic2 = loadedManager.getEpicById(epic2.getId());
         assertNotNull(loadedEpic2);
         assertEquals(epic2.getTitle(), loadedEpic2.getTitle());
         assertEquals(epic2.getDescription(), loadedEpic2.getDescription());
         assertTrue(loadedEpic2.getSubtaskIds().contains(subtask2.getId()));
+        assertEquals(subtask2.getEndTime(), loadedEpic2.getEndTime());
 
         Subtask loadedSubtask = loadedManager.getSubtaskById(subtask.getId());
         assertNotNull(loadedSubtask);
@@ -148,6 +148,20 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(epic2.getId(), loadedSubtask2.getEpicId());
         assertEquals(subtask2.getDuration(), loadedSubtask2.getDuration());
         assertEquals(subtask2.getStartTime(), loadedSubtask2.getStartTime());
+
+        List<Task> prioritizedTasks = loadedManager.getPrioritizedTasks();
+        assertEquals(6, prioritizedTasks.size(), "Должно быть 6 задач");
+
+        for (int i = 0; i < prioritizedTasks.size() - 1; i++) {
+            Task current = prioritizedTasks.get(i);
+            Task next = prioritizedTasks.get(i + 1);
+
+            if (current.getStartTime() != null && next.getStartTime() != null) {
+                assertTrue(current.getStartTime().isBefore(next.getStartTime()) ||
+                                current.getStartTime().equals(next.getStartTime()),
+                        "Задачи должны быть отсортированы по времени начала");
+            }
+        }
     }
 
     @Test
