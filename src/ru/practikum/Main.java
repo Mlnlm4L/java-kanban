@@ -7,28 +7,33 @@ import ru.practikum.model.Epic;
 import ru.practikum.model.Subtask;
 import ru.practikum.manager.TaskManager;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
         TaskManager manager = Managers.getDefault();
 
-        Task task1 = manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW));
-        Task task2 = manager.createTask(new Task("Задача 2", "Описание 2", Status.NEW));
+        Task task1 = manager.createTask(new Task("Задача 1", "Описание 1", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2025, 1, 1, 10, 0)));
+        Task task2 = manager.createTask(new Task("Задача 2", "Описание 2", Status.NEW,
+                Duration.ofHours(1), LocalDateTime.of(2025, 2, 1, 10, 0)));
         Epic epic1 = manager.createEpic(new Epic("Эпик 1", "Описание эпика 1"));
         Subtask subtask1 = manager.createSubtask(new Subtask("Подзадача 1", "Описание 1",
-                Status.NEW, epic1.getId()));
+                Status.NEW, epic1.getId(), Duration.ofHours(10),
+                LocalDateTime.of(2025, 1, 1, 12, 0)));
         Subtask subtask2 = manager.createSubtask(new Subtask("Подзадача 2", "Описание 2",
-                Status.NEW, epic1.getId()));
+                Status.NEW, epic1.getId(),  Duration.ofHours(8),
+                LocalDateTime.of(2025, 2, 1, 12, 0)));
         Epic epic2 = manager.createEpic(new Epic("Эпик 2", "Описание эпика 2"));
         Subtask subtask3 = manager.createSubtask(new Subtask("Подзадача 3", "Описание 3",
-                Status.NEW, epic2.getId()));
+                Status.NEW, epic2.getId(), Duration.ofHours(2),
+                LocalDateTime.of(2025, 3, 1, 12, 0)));
 
-        //Печать начального состояния
         System.out.println("=== Создание задач ===");
         printAllTasks(manager);
 
-        //Изменение статусов
         task1.setStatus(Status.IN_PROGRESS);
         manager.updateTask(task1);
         manager.getTaskById(task1.getId());
@@ -51,11 +56,9 @@ public class Main {
         manager.getSubtaskById(subtask3.getId());
         manager.getEpicById(epic2.getId());
 
-        //Печать после изменений
         System.out.println("\n=== После изменения статусов ===");
         printAllTasks(manager);
 
-        //Проверка статусов
         System.out.println("\n=== Проверка статусов ===");
         System.out.println("Задача 1: " + task1.getStatus() + " (Ожидается IN_PROGRESS)");
         System.out.println("Задача 1: " + task2.getStatus() + " (Ожидается DONE)");
@@ -65,12 +68,10 @@ public class Main {
         System.out.println("Эпик 1: " + epic1.getStatus() + " (Ожидается DONE)");
         System.out.println("Эпик 2: " + epic2.getStatus() + " (Ожидается IN_PROGRESS)");
 
-        //История
         List<Task> history = manager.getHistory();
         System.out.println("\n=== История запросов ===");
         history.forEach(task -> System.out.println(task.getTitle()));
 
-        //Удаление
         manager.deleteTaskById(task1.getId());
         manager.deleteEpicById(epic1.getId());
         System.out.println("\n=== После удаления ===");
