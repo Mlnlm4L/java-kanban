@@ -162,7 +162,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 epic.setDuration(duration);
                 epic.setStartTime(startTime);
                 epic.setEndTime(endTime);
-                sortedTasks.add(epic);
                 return epic;
 
             case SUBTASK:

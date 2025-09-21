@@ -122,14 +122,18 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(epic.getTitle(), loadedEpic.getTitle());
         assertEquals(epic.getDescription(), loadedEpic.getDescription());
         assertTrue(loadedEpic.getSubtaskIds().contains(subtask.getId()));
-        assertEquals(subtask.getEndTime(), loadedEpic.getEndTime());
+        assertEquals(epic.getEndTime(), loadedEpic.getEndTime());
+        assertEquals(epic.getStartTime(), loadedEpic.getStartTime());
+        assertEquals(epic.getDuration(), loadedEpic.getDuration());
 
         Epic loadedEpic2 = loadedManager.getEpicById(epic2.getId());
         assertNotNull(loadedEpic2);
         assertEquals(epic2.getTitle(), loadedEpic2.getTitle());
         assertEquals(epic2.getDescription(), loadedEpic2.getDescription());
         assertTrue(loadedEpic2.getSubtaskIds().contains(subtask2.getId()));
-        assertEquals(subtask2.getEndTime(), loadedEpic2.getEndTime());
+        assertEquals(epic2.getEndTime(), loadedEpic2.getEndTime());
+        assertEquals(epic2.getStartTime(), loadedEpic2.getStartTime());
+        assertEquals(epic2.getDuration(), loadedEpic2.getDuration());
 
         Subtask loadedSubtask = loadedManager.getSubtaskById(subtask.getId());
         assertNotNull(loadedSubtask);
@@ -150,7 +154,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskMan
         assertEquals(subtask2.getStartTime(), loadedSubtask2.getStartTime());
 
         List<Task> prioritizedTasks = loadedManager.getPrioritizedTasks();
-        assertEquals(6, prioritizedTasks.size(), "Должно быть 6 задач");
+        assertEquals(4, prioritizedTasks.size(), "Должно быть 4 задачи");
 
         for (int i = 0; i < prioritizedTasks.size() - 1; i++) {
             Task current = prioritizedTasks.get(i);
