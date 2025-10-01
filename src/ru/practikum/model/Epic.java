@@ -12,6 +12,10 @@ public class Epic extends Task {
         super(title, description, Status.NEW);
     }
 
+    public Epic() {
+        super("", "", Status.NEW);
+    }
+
     public List<Integer> getSubtaskIds() {
         return subtaskIds;
     }
