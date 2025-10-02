@@ -1,18 +1,15 @@
 package ru.practikum.api;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import ru.practikum.exception.TaskTimeConflictException;
 import ru.practikum.manager.TaskManager;
 import ru.practikum.model.Subtask;
 
 import java.io.IOException;
 
-public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
+public class SubtasksHandler extends BaseHttpHandler {
 
-    public SubtasksHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
+    public SubtasksHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
@@ -41,11 +38,11 @@ public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleGet(HttpExchange exchange, String path) throws IOException {
         if (path.equals("/subtasks")) {
-            String response = gson.toJson(taskManager.getAllSubtasks());
+            String response = gson.toJson(manager.getAllSubtasks());
             sendSuccess(exchange, response);
         } else if (path.matches("/subtasks/\\d+")) {
             int id = extractIdFromPath(path);
-            Subtask subtask = taskManager.getSubtaskById(id);
+            Subtask subtask = manager.getSubtaskById(id);
             if (subtask == null) {
                 sendNotFound(exchange);
             } else {
@@ -59,14 +56,12 @@ public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handlePost(HttpExchange exchange) throws IOException {
         Subtask subtask = parseJson(exchange.getRequestBody(), Subtask.class);
-
-        if (subtask == null) {
-            sendBadRequest(exchange, "Данные подзадачи обязательны");
-            return;
-        }
-
         if (subtask.getId() == 0) {
-            Subtask createdSubtask = taskManager.createSubtask(subtask);
+            if (subtask.getTitle() == null || subtask.getTitle().isBlank()) {
+                sendBadRequest(exchange, "Название подзадачи обязательно");
+                return;
+            }
+            Subtask createdSubtask = manager.createSubtask(subtask);
             if (createdSubtask == null) {
                 sendBadRequest(exchange, "Не удалось создать подзадачу - эпик не найден");
             } else {
@@ -74,7 +69,7 @@ public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
                 sendCreated(exchange, response);
             }
         } else {
-            taskManager.updateSubtask(subtask);
+            manager.updateSubtask(subtask);
             sendCreated(exchange, "Подзадача успешно обновлена");
         }
     }
@@ -82,33 +77,15 @@ public class SubtasksHandler extends BaseHttpHandler implements HttpHandler {
     private void handleDelete(HttpExchange exchange, String path) throws IOException {
         if (path.matches("/subtasks/\\d+")) {
             int id = extractIdFromPath(path);
-            Subtask subtask = taskManager.getSubtaskById(id);
+            Subtask subtask = manager.getSubtaskById(id);
             if (subtask == null) {
                 sendNotFound(exchange);
             } else {
-                taskManager.deleteSubtaskById(id);
+                manager.deleteSubtaskById(id);
                 sendSuccess(exchange, "Подзадача успешно удалена");
             }
-        } else if (path.equals("/subtasks")) {
-            taskManager.deleteAllSubtasks();
-            sendSuccess(exchange, "Все подзадачи успешно удалены");
         } else {
             sendNotFound(exchange);
-        }
-    }
-
-    private int extractIdFromPath(String path) {
-        String[] parts = path.split("/");
-        return Integer.parseInt(parts[2]);
-    }
-
-    private void handleException(HttpExchange exchange, Exception e) throws IOException {
-        if (e instanceof IllegalArgumentException) {
-            sendBadRequest(exchange, e.getMessage());
-        } else if (e instanceof TaskTimeConflictException) {
-            sendHasOverlaps(exchange);
-        } else {
-            sendInternalError(exchange);
         }
     }
 }

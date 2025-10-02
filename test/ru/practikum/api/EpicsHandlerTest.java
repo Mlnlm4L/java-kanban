@@ -81,32 +81,6 @@ class EpicsHandlerTest extends BaseHttpTest {
     }
 
     @Test
-    void testUpdateEpic() throws IOException, InterruptedException {
-        Epic epic = new Epic("Эпик", "Описание");
-        Epic createdEpic = manager.createEpic(epic);
-
-        Epic updatedEpic = new Epic("Обновленный эпик", "Обновленное описание");
-        updatedEpic.setId(createdEpic.getId());
-        String updatedEpicJson = gson.toJson(updatedEpic);
-
-        HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create(getBaseUrl() + "/epics");
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(url)
-                .POST(HttpRequest.BodyPublishers.ofString(updatedEpicJson))
-                .header("Content-Type", "application/json")
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        assertEquals(201, response.statusCode());
-
-        Epic epicFromManager = manager.getEpicById(createdEpic.getId());
-        assertEquals("Обновленный эпик", epicFromManager.getTitle());
-        assertEquals("Обновленное описание", epicFromManager.getDescription());
-    }
-
-    @Test
     void testDeleteEpic() throws IOException, InterruptedException {
         Epic epic = new Epic("Эпик для удаления", "Описание");
         Epic createdEpic = manager.createEpic(epic);
@@ -150,5 +124,22 @@ class EpicsHandlerTest extends BaseHttpTest {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(404, response.statusCode());
+    }
+
+    @Test
+    void testCreateEpicWithEmptyBody() throws IOException, InterruptedException {
+        HttpClient httpClient = HttpClient.newHttpClient();
+        URI url = URI.create(getBaseUrl() + "/epics");
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(""))
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, response.statusCode());
+        assertTrue(response.body().contains("Тело запроса не может быть пустым"));
     }
 }

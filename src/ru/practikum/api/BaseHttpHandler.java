@@ -3,13 +3,23 @@ package ru.practikum.api;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import ru.practikum.exception.TaskTimeConflictException;
+import ru.practikum.manager.TaskManager;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-public class BaseHttpHandler {
-    protected static final Gson gson = JsonAdapter.createGson();
+public abstract class BaseHttpHandler implements HttpHandler {
+    protected final TaskManager manager;
+    protected final Gson gson = JsonAdapter.createGson();
+
+    protected BaseHttpHandler(TaskManager manager) {
+        this.manager = manager;
+    }
+
+    public abstract void handle(HttpExchange exchange) throws IOException;
 
     protected void sendText(HttpExchange exchange, String text, int statusCode) throws IOException {
         byte[] response = text.getBytes(StandardCharsets.UTF_8);
@@ -65,10 +75,28 @@ public class BaseHttpHandler {
         try {
             String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             System.out.println("Получен JSON: " + body);
+            if (body == null || body.trim().isEmpty()) {
+                throw new IllegalArgumentException("Тело запроса не может быть пустым");
+            }
             return gson.fromJson(body, clazz);
         } catch (JsonSyntaxException e) {
-            System.err.println("Ошибка парсинга JSON: " + e.getMessage());
+            System.out.println("Ошибка парсинга JSON: " + e.getMessage());
             throw new IllegalArgumentException("Некорректный формат JSON: " + e.getMessage(), e);
+        }
+    }
+
+    protected int extractIdFromPath(String path) {
+        String[] parts = path.split("/");
+        return Integer.parseInt(parts[2]);
+    }
+
+    protected void handleException(HttpExchange exchange, Exception e) throws IOException {
+        if (e instanceof IllegalArgumentException) {
+            sendBadRequest(exchange, e.getMessage());
+        } else if (e instanceof TaskTimeConflictException) {
+            sendHasOverlaps(exchange);
+        } else {
+            sendInternalError(exchange);
         }
     }
 }

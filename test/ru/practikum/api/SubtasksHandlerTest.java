@@ -193,4 +193,23 @@ class SubtasksHandlerTest extends BaseHttpTest {
         HttpResponse<String> response2 = client.send(request2, HttpResponse.BodyHandlers.ofString());
         assertEquals(406, response2.statusCode());
     }
+
+    @Test
+    void testCreateSubtaskWithEmptyBody() throws IOException, InterruptedException {
+        Epic epic = createTestEpic();
+
+        HttpClient httpClient = HttpClient.newHttpClient();
+        URI url = URI.create(getBaseUrl() + "/subtasks");
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(""))
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, response.statusCode());
+        assertTrue(response.body().contains("Тело запроса не может быть пустым"));
+    }
 }

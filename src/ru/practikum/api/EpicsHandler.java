@@ -1,18 +1,15 @@
 package ru.practikum.api;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import ru.practikum.exception.TaskTimeConflictException;
-import ru.practikum.model.Epic;
 import ru.practikum.manager.TaskManager;
+import ru.practikum.model.Epic;
 
 import java.io.IOException;
 
-public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
+public class EpicsHandler extends BaseHttpHandler {
 
-    public EpicsHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
+    public EpicsHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
@@ -41,11 +38,11 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleGet(HttpExchange exchange, String path) throws IOException {
         if (path.equals("/epics")) {
-            String response = gson.toJson(taskManager.getAllEpics());
+            String response = gson.toJson(manager.getAllEpics());
             sendSuccess(exchange, response);
         } else if (path.matches("/epics/\\d+")) {
             int id = extractIdFromPath(path);
-            Epic epic = taskManager.getEpicById(id);
+            Epic epic = manager.getEpicById(id);
             if (epic == null) {
                 sendNotFound(exchange);
             } else {
@@ -54,11 +51,11 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
             }
         } else if (path.matches("/epics/\\d+/subtasks")) {
             int id = extractIdFromPath(path.replace("/subtasks", ""));
-            Epic epic = taskManager.getEpicById(id);
+            Epic epic = manager.getEpicById(id);
             if (epic == null) {
                 sendNotFound(exchange);
             } else {
-                String response = gson.toJson(taskManager.getSubtasksByEpicId(id));
+                String response = gson.toJson(manager.getSubtasksByEpicId(id));
                 sendSuccess(exchange, response);
             }
         } else {
@@ -68,58 +65,27 @@ public class EpicsHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handlePost(HttpExchange exchange) throws IOException {
         Epic epic = parseJson(exchange.getRequestBody(), Epic.class);
-
-        if (epic == null) {
-            sendBadRequest(exchange, "Данные эпика обязательны");
+        if (epic.getTitle() == null || epic.getTitle().isBlank()) {
+            sendBadRequest(exchange, "Название эпика обязательно");
             return;
         }
-
-        if (epic.getId() == 0) {
-            Epic createdEpic = taskManager.createEpic(epic);
-            String response = gson.toJson(createdEpic);
-            sendCreated(exchange, response);
-        } else {
-            Epic existingEpic = taskManager.getEpicById(epic.getId());
-            if (existingEpic == null) {
-                sendNotFound(exchange);
-            } else {
-                existingEpic.setTitle(epic.getTitle());
-                existingEpic.setDescription(epic.getDescription());
-                sendCreated(exchange, "Эпик успешно обновлен");
-            }
-        }
+        Epic createdEpic = manager.createEpic(epic);
+        String response = gson.toJson(createdEpic);
+        sendCreated(exchange, response);
     }
 
     private void handleDelete(HttpExchange exchange, String path) throws IOException {
         if (path.matches("/epics/\\d+")) {
             int id = extractIdFromPath(path);
-            Epic epic = taskManager.getEpicById(id);
+            Epic epic = manager.getEpicById(id);
             if (epic == null) {
                 sendNotFound(exchange);
             } else {
-                taskManager.deleteEpicById(id);
+                manager.deleteEpicById(id);
                 sendSuccess(exchange, "Эпик успешно удален");
             }
-        } else if (path.equals("/epics")) {
-            taskManager.deleteAllEpics();
-            sendSuccess(exchange, "Все эпики успешно удалены");
         } else {
             sendNotFound(exchange);
-        }
-    }
-
-    private int extractIdFromPath(String path) {
-        String[] parts = path.split("/");
-        return Integer.parseInt(parts[2]);
-    }
-
-    private void handleException(HttpExchange exchange, Exception e) throws IOException {
-        if (e instanceof IllegalArgumentException) {
-            sendBadRequest(exchange, e.getMessage());
-        } else if (e instanceof TaskTimeConflictException) {
-            sendHasOverlaps(exchange);
-        } else {
-            sendInternalError(exchange);
         }
     }
 }

@@ -1,23 +1,21 @@
 package ru.practikum.api;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import ru.practikum.manager.TaskManager;
 
 import java.io.IOException;
 
-public class PrioritizedHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
+public class PrioritizedHandler extends BaseHttpHandler {
 
-    public PrioritizedHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
+    public PrioritizedHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
             if ("GET".equals(exchange.getRequestMethod())) {
-                String response = gson.toJson(taskManager.getPrioritizedTasks());
+                String response = gson.toJson(manager.getPrioritizedTasks());
                 sendSuccess(exchange, response);
             } else {
                 sendNotFound(exchange);

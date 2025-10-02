@@ -1,18 +1,15 @@
 package ru.practikum.api;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import ru.practikum.exception.TaskTimeConflictException;
 import ru.practikum.manager.TaskManager;
 import ru.practikum.model.Task;
 
 import java.io.IOException;
 
-public class TasksHandler extends BaseHttpHandler implements HttpHandler {
-    private final TaskManager taskManager;
+public class TasksHandler extends BaseHttpHandler {
 
-    public TasksHandler(TaskManager taskManager) {
-        this.taskManager = taskManager;
+    public TasksHandler(TaskManager manager) {
+        super(manager);
     }
 
     @Override
@@ -41,11 +38,11 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleGet(HttpExchange exchange, String path) throws IOException {
         if (path.equals("/tasks")) {
-            String response = gson.toJson(taskManager.getAllTasks());
+            String response = gson.toJson(manager.getAllTasks());
             sendSuccess(exchange, response);
         } else if (path.matches("/tasks/\\d+")) {
             int id = extractIdFromPath(path);
-            Task task = taskManager.getTaskById(id);
+            Task task = manager.getTaskById(id);
             if (task == null) {
                 sendNotFound(exchange);
             } else {
@@ -59,18 +56,16 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handlePost(HttpExchange exchange) throws IOException {
         Task task = parseJson(exchange.getRequestBody(), Task.class);
-
-        if (task == null) {
-            sendBadRequest(exchange, "Данные задачи обязательны");
-            return;
-        }
-
         if (task.getId() == 0) {
-            Task createdTask = taskManager.createTask(task);
+            if (task.getTitle() == null || task.getTitle().isBlank()) {
+                sendBadRequest(exchange, "Название задачи обязательно");
+                return;
+            }
+            Task createdTask = manager.createTask(task);
             String response = gson.toJson(createdTask);
             sendCreated(exchange, response);
         } else {
-            taskManager.updateTask(task);
+            manager.updateTask(task);
             sendCreated(exchange, "Задача успешно обновлена");
         }
     }
@@ -78,33 +73,15 @@ public class TasksHandler extends BaseHttpHandler implements HttpHandler {
     private void handleDelete(HttpExchange exchange, String path) throws IOException {
         if (path.matches("/tasks/\\d+")) {
             int id = extractIdFromPath(path);
-            Task task = taskManager.getTaskById(id);
+            Task task = manager.getTaskById(id);
             if (task == null) {
                 sendNotFound(exchange);
             } else {
-                taskManager.deleteTaskById(id);
+                manager.deleteTaskById(id);
                 sendSuccess(exchange, "Задача успешно удалена");
             }
-        } else if (path.equals("/tasks")) {
-            taskManager.deleteAllTasks();
-            sendSuccess(exchange, "Все задачи успешно удалены");
         } else {
             sendNotFound(exchange);
-        }
-    }
-
-    private int extractIdFromPath(String path) {
-        String[] parts = path.split("/");
-        return Integer.parseInt(parts[2]);
-    }
-
-    private void handleException(HttpExchange exchange, Exception e) throws IOException {
-        if (e instanceof IllegalArgumentException) {
-            sendBadRequest(exchange, e.getMessage());
-        } else if (e instanceof TaskTimeConflictException) {
-            sendHasOverlaps(exchange);
-        } else {
-            sendInternalError(exchange);
         }
     }
 }

@@ -162,4 +162,20 @@ class TasksHandlerTest extends BaseHttpTest {
         assertEquals(406, response2.statusCode());
     }
 
+    @Test
+    void testCreateTaskWithEmptyBody() throws IOException, InterruptedException {
+        HttpClient httpClient = HttpClient.newHttpClient();
+        URI url = URI.create(getBaseUrl() + "/tasks");
+
+        HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(""))
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, response.statusCode());
+        assertTrue(response.body().contains("Тело запроса не может быть пустым"));
+    }
 }
