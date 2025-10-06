@@ -26,17 +26,6 @@ public class Task {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
-        if (startTime == null || duration == null) {
-            return null;
-        }
-        return startTime.plus(duration);
-    }
-
-    public TaskType getType() {
-        return TaskType.TASK;
-    }
-
     public int getId() {
         return id;
     }
@@ -83,6 +72,17 @@ public class Task {
 
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        if (startTime == null || duration == null) {
+            return null;
+        }
+        return startTime.plus(duration);
+    }
+
+    public TaskType getType() {
+        return TaskType.TASK;
     }
 
     @Override
